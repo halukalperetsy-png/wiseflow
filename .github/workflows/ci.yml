@@ -1,0 +1,54 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  backend:
+    # Docker is preinstalled on this runner, which Testcontainers needs.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          # Single source of truth. Deliberately NOT dotnet-version, so the SDK
+          # cannot drift away from the pinned one in global.json.
+          global-json-file: global.json
+
+      - run: dotnet restore
+
+      # GitHub Actions only sets CI=true; ContinuousIntegrationBuild is not
+      # implied. Directory.Build.props gates TreatWarningsAsErrors on it, so it
+      # is passed explicitly here.
+      - run: dotnet build -c Release --no-restore -p:ContinuousIntegrationBuild=true
+
+      - run: dotnet test -c Release --no-build -p:ContinuousIntegrationBuild=true
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/WebApp
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.19.0'
+          cache: npm
+          cache-dependency-path: src/WebApp/package-lock.json
+
+      # Installs package-lock.json exactly and fails if it disagrees with
+      # package.json -- reproducible, unlike npm install.
+      - run: npm ci
+
+      - run: npm run lint -- --deny-warnings
+
+      - run: npm run typecheck
+
+      # Dependency-free regression checks for the probeHealth classification.
+      - run: npm run check:health
+
+      - run: npm run build

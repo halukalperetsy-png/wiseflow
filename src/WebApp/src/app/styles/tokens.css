@@ -1,0 +1,59 @@
+/*
+ * Design tokens. Every colour is defined once on bare :root (the light palette)
+ * so no value exists only inside a media query. Dark values are redefined in
+ * two places: the system preference, and an explicit choice that always wins.
+ */
+
+:root {
+  --color-bg: #ffffff;
+  --color-surface: #f6f7f9;
+  --color-surface-raised: #ffffff;
+  --color-text: #12151a;
+  --color-text-muted: #5b6472;
+  --color-border: #dfe3e8;
+  --color-accent: #2563eb;
+  --color-success: #15803d;
+  --color-warning: #b45309;
+  --color-danger: #b91c1c;
+
+  --radius: 10px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "Cascadia Mono", Consolas, monospace;
+}
+
+/* System preference, unless an explicit light choice overrides it. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-bg: #0f1115;
+    --color-surface: #161a21;
+    --color-surface-raised: #1c222b;
+    --color-text: #e8ecf1;
+    --color-text-muted: #98a2b3;
+    --color-border: #2a313c;
+    --color-accent: #60a5fa;
+    --color-success: #4ade80;
+    --color-warning: #fbbf24;
+    --color-danger: #f87171;
+  }
+}
+
+/* Explicit choice wins in both directions. */
+:root[data-theme="dark"] {
+  --color-bg: #0f1115;
+  --color-surface: #161a21;
+  --color-surface-raised: #1c222b;
+  --color-text: #e8ecf1;
+  --color-text-muted: #98a2b3;
+  --color-border: #2a313c;
+  --color-accent: #60a5fa;
+  --color-success: #4ade80;
+  --color-warning: #fbbf24;
+  --color-danger: #f87171;
+}

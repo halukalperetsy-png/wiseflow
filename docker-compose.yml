@@ -1,0 +1,36 @@
+name: commerceops
+
+# Local development infrastructure only.
+# The API and the web app are NOT containerised in Phase 0 -- they run natively
+# via `dotnet run` and `npm run dev`. Container images for deployment come later.
+
+services:
+  postgres:
+    image: postgres:18
+    container_name: commerceops-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-commerceops}
+      POSTGRES_USER: ${POSTGRES_USER:-commerceops}
+      # `:?` fails fast when the variable is unset OR empty, with this message.
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?is empty or unset. Copy .env.example to .env and set a value.}
+    ports:
+      # Loopback only. Without the 127.0.0.1 prefix Docker publishes on 0.0.0.0
+      # and the development database becomes reachable from the local network.
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      # Mounted at the PARENT directory on purpose.
+      # PostgreSQL 18 images place PGDATA differently from earlier majors;
+      # mounting the parent keeps data durable under either layout. Mounting a
+      # wrong subpath would silently write to an anonymous volume and lose data
+      # on the next `docker compose down`.
+      - postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-commerceops} -d ${POSTGRES_DB:-commerceops}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+volumes:
+  postgres_data:
