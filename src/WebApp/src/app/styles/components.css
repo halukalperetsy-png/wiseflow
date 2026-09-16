@@ -1,0 +1,436 @@
+/*
+ * Shared admin styles.
+ *
+ * Phase 0 styled everything with inline style objects, which cannot express
+ * :hover, :focus-visible or a media query -- and visible focus, keyboard
+ * reachability and a usable narrow layout are all requirements here. So the
+ * repeating pieces live in this one stylesheet, prefixed co-, and every colour
+ * still comes from a token so light and dark keep working.
+ */
+
+/* ---------- layout ---------- */
+
+.co-page {
+  max-width: 1040px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.co-page-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.co-page-title {
+  margin: 0;
+  font-size: 20px;
+  letter-spacing: -0.01em;
+}
+
+.co-page-subtitle {
+  margin: var(--space-1) 0 0;
+  color: var(--color-text-muted);
+}
+
+.co-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.co-card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface-raised);
+  padding: var(--space-5);
+}
+
+.co-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.co-muted {
+  color: var(--color-text-muted);
+}
+
+/* ---------- app shell ---------- */
+
+.co-shell {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.co-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-5);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.co-brand {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.co-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  flex: 1;
+}
+
+.co-nav-link {
+  color: var(--color-text-muted);
+  text-decoration: none;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius);
+  border: 1px solid transparent;
+}
+
+.co-nav-link:hover {
+  color: var(--color-text);
+  border-color: var(--color-border);
+}
+
+.co-nav-link:focus-visible,
+.co-link:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.co-nav-link[aria-current='page'] {
+  color: var(--color-text);
+  border-color: var(--color-border);
+  background: var(--color-surface-raised);
+  font-weight: 600;
+}
+
+.co-session {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  margin-inline-start: auto;
+}
+
+.co-session-name {
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.co-main {
+  flex: 1;
+  padding: var(--space-6) var(--space-5);
+}
+
+.co-centered {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-6) var(--space-4);
+}
+
+.co-centered-card {
+  width: 100%;
+  max-width: 400px;
+}
+
+/* ---------- buttons and links ---------- */
+
+.co-button {
+  font: inherit;
+  cursor: pointer;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+  border-radius: var(--radius);
+  padding: var(--space-2) var(--space-4);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.co-button:hover:not(:disabled) {
+  border-color: var(--color-accent);
+}
+
+.co-button:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.co-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.co-button--primary {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-accent-text);
+  font-weight: 600;
+}
+
+.co-button--danger {
+  color: var(--color-danger);
+  border-color: var(--color-danger);
+  background: transparent;
+}
+
+.co-button--block {
+  width: 100%;
+  justify-content: center;
+}
+
+.co-link {
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* ---------- forms ---------- */
+
+.co-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.co-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.co-label {
+  font-weight: 600;
+}
+
+.co-input {
+  font: inherit;
+  color: var(--color-text);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--space-2) var(--space-3);
+  width: 100%;
+}
+
+.co-input:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
+.co-input[aria-invalid='true'] {
+  border-color: var(--color-danger);
+}
+
+.co-hint {
+  color: var(--color-text-muted);
+  font-size: 13px;
+}
+
+.co-field-error {
+  color: var(--color-danger);
+  font-size: 13px;
+}
+
+.co-fieldset {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--space-3) var(--space-4) var(--space-4);
+  margin: 0;
+}
+
+.co-legend {
+  font-weight: 600;
+  padding: 0 var(--space-2);
+}
+
+.co-checklist {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.co-check {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.co-check input {
+  margin-top: 3px;
+}
+
+.co-check input:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* ---------- feedback ---------- */
+
+.co-alert {
+  border: 1px solid var(--color-border);
+  border-inline-start: 3px solid var(--color-text-muted);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  padding: var(--space-3) var(--space-4);
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+}
+
+.co-alert--error {
+  border-inline-start-color: var(--color-danger);
+}
+
+.co-alert--success {
+  border-inline-start-color: var(--color-success);
+}
+
+.co-alert--warning {
+  border-inline-start-color: var(--color-warning);
+}
+
+.co-alert-icon {
+  font-weight: 700;
+}
+
+.co-alert-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.co-alert-title {
+  font-weight: 600;
+}
+
+.co-alert-list {
+  margin: 0;
+  padding-inline-start: var(--space-5);
+}
+
+.co-empty {
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--space-6) var(--space-4);
+  text-align: center;
+  color: var(--color-text-muted);
+}
+
+.co-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  padding: 1px var(--space-2);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.co-badge--on {
+  color: var(--color-success);
+  border-color: var(--color-success);
+}
+
+.co-badge--off {
+  color: var(--color-text-muted);
+}
+
+.co-badge--warning {
+  color: var(--color-warning);
+  border-color: var(--color-warning);
+}
+
+.co-secret {
+  font-family: var(--font-mono);
+  font-size: 15px;
+  letter-spacing: 0.04em;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--space-2) var(--space-3);
+  word-break: break-all;
+}
+
+/* ---------- tables ---------- */
+
+.co-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}
+
+.co-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 520px;
+}
+
+.co-table th,
+.co-table td {
+  text-align: start;
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  vertical-align: top;
+}
+
+.co-table thead th {
+  background: var(--color-surface);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+}
+
+.co-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* ---------- narrow screens ---------- */
+
+@media (max-width: 640px) {
+  .co-header {
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .co-main {
+    padding: var(--space-5) var(--space-4);
+  }
+
+  .co-card {
+    padding: var(--space-4);
+  }
+
+  .co-session {
+    margin-inline-start: 0;
+    width: 100%;
+  }
+
+  .co-nav {
+    order: 3;
+    width: 100%;
+  }
+
+  .co-page-header {
+    align-items: flex-start;
+  }
+}

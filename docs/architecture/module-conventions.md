@@ -31,20 +31,22 @@ The design document names seven domain modules:
 Identity  Catalog  Media  Ai  Marketplace  Workflow  Audit
 ```
 
-**None of them exist yet.** Empty folders with `.gitkeep` files are not
-structure, they are noise. Each is created by the phase that first needs it:
+Each is created by the phase that first needs it. Empty folders with `.gitkeep`
+files are not structure, they are noise:
 
 | Module        | Created in |
 |---------------|------------|
 | `Identity`    | Phase 1 |
-| `Catalog`     | Phase 2 |
+| `Catalog`     | Phase 1 (product groups only), the rest in Phase 2 |
 | `Media`       | Phase 3 |
 | `Ai`          | Phase 4 |
 | `Marketplace` | Phase 6 |
 | `Workflow`    | Phase 6-7 |
 | `Audit`       | Phase 7 |
 
-Today only `Platform` exists, holding the health endpoint.
+`Catalog` opened early for one reason: product groups are the unit of data
+authorization, so Phase 1 needs them, and `catalog.products` will take a foreign
+key to them in Phase 2. It holds that one slice and nothing else.
 
 ---
 
@@ -136,6 +138,15 @@ the entity they configure inside the owning module. `ApplyConfigurationsFromAsse
 picks them up — so adding an entity means adding two files in one module folder
 and nothing else.
 
+**Modules do not add `DbSet` properties.** Module code reads and writes through
+`context.Set<T>()`, so `Infrastructure` does not acquire a `using` for every
+module that ever ships. The one exception is ASP.NET Core Identity's own sets,
+which come from the `IdentityDbContext` base type (see ADR-003).
+
+Names are snake_case, applied by `Infrastructure/Persistence/SnakeCaseNaming.cs`
+at the end of `OnModelCreating` — not by a naming-convention plugin. ADR-002
+records why.
+
 Modules map to PostgreSQL **schemas** (`identity`, `catalog`, `media`, …). Each
 schema is created by the migration that adds its first table. `public` holds no
 domain tables; EF's own `__EFMigrationsHistory` is the only thing there.
@@ -154,6 +165,14 @@ still only touch products in their assigned product groups.
 
 Hiding a control in the frontend is a usability decision. It is never a security
 control.
+
+The permission catalog is code, not rows: `Modules/Identity/Authorization/Permissions.cs`
+holds the names, `RolePermissions.cs` maps roles to them, and every policy is
+generated from that catalog so a policy name that does not exist cannot be
+referenced. ADR-003 explains the reasoning.
+
+A record outside the caller's scope answers **404**, not 403. A user who may not
+see something should not learn that it exists.
 
 ---
 

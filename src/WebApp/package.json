@@ -9,11 +9,15 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "typecheck": "tsc -b --noEmit",
-    "check:health": "node src/features/health/healthApi.check.ts"
+    "check:health": "node src/features/health/healthApi.check.ts",
+    "check:api": "node src/shared/apiClient.check.ts",
+    "check:permissions": "node src/features/auth/permissions.check.ts",
+    "check": "npm run check:health && npm run check:api && npm run check:permissions"
   },
   "dependencies": {
     "react": "^19.2.8",
-    "react-dom": "^19.2.8"
+    "react-dom": "^19.2.8",
+    "react-router": "^7.18.4"
   },
   "devDependencies": {
     "@types/node": "^24.13.3",

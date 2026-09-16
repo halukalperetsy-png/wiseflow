@@ -48,7 +48,12 @@ jobs:
 
       - run: npm run typecheck
 
-      # Dependency-free regression checks for the probeHealth classification.
+      # Dependency-free regression checks: probeHealth classification, the API
+      # client's CSRF and session handling, and the permission helpers.
       - run: npm run check:health
+
+      - run: npm run check:api
+
+      - run: npm run check:permissions
 
       - run: npm run build

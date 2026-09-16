@@ -1,29 +1,62 @@
-import type { ReactNode } from 'react';
+import { NavLink, Outlet } from 'react-router';
+import { canManageUsers, canViewProductGroups } from '../features/auth/permissions.ts';
+import { useAuth } from '../features/auth/useAuth.ts';
 import { ThemeToggle } from './theme/ThemeToggle';
 
 /**
- * Phase 0 shell: header plus content. No sidebar yet -- there is no second
- * page to navigate to. It arrives with the real menu in a later phase.
+ * The signed-in shell: brand, navigation, who is signed in, sign out, theme.
+ *
+ * Navigation only lists what this user may actually open. That is a usability
+ * decision -- the API refuses the same call regardless of what is on screen.
  */
-export function AppShell({ children }: { children: ReactNode }) {
+export function AppShell() {
+  const { user, signOut } = useAuth();
+
   return (
-    <div style={{ minHeight: '100%', display: 'flex', flexDirection: 'column' }}>
-      <header
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: 'var(--space-4)',
-          padding: 'var(--space-3) var(--space-5)',
-          borderBottom: '1px solid var(--color-border)',
-          background: 'var(--color-surface)',
-        }}
-      >
-        <strong style={{ fontSize: '15px', letterSpacing: '-0.01em' }}>CommerceOps</strong>
-        <ThemeToggle />
+    <div className="co-shell">
+      <header className="co-header">
+        <span className="co-brand">CommerceOps</span>
+
+        <nav className="co-nav" aria-label="Ana menü">
+          {canViewProductGroups(user) && (
+            <NavLink className="co-nav-link" to="/product-groups">
+              Ürün grupları
+            </NavLink>
+          )}
+          {canManageUsers(user) && (
+            <NavLink className="co-nav-link" to="/admin/users">
+              Kullanıcılar
+            </NavLink>
+          )}
+          {canManageUsers(user) && (
+            <NavLink className="co-nav-link" to="/system">
+              Sistem
+            </NavLink>
+          )}
+        </nav>
+
+        <div className="co-session">
+          {user !== null && (
+            <NavLink className="co-session-name co-link" to="/change-password">
+              {user.displayName}
+            </NavLink>
+          )}
+          <ThemeToggle />
+          <button
+            type="button"
+            className="co-button"
+            onClick={() => {
+              void signOut();
+            }}
+          >
+            Çıkış
+          </button>
+        </div>
       </header>
 
-      <main style={{ flex: 1, padding: 'var(--space-6) var(--space-5)' }}>{children}</main>
+      <main className="co-main">
+        <Outlet />
+      </main>
     </div>
   );
 }

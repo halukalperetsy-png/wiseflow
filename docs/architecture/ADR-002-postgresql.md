@@ -64,9 +64,37 @@ Phase 0 applies an empty `InitialCreate` migration whose only effect is to creat
   `127.0.0.1` rather than `localhost`: on Windows `localhost` resolves to `::1`
   first, and nothing is listening there.
 
-## Notes for the next phase
+## Amendment (Phase 1): how snake_case is applied
 
-All table and column names in the design document are `snake_case`. Before the
-first real entity migration is generated, add `EFCore.NamingConventions` and call
-`UseSnakeCaseNamingConvention()`. Doing this after migrations exist would mean
-rewriting them.
+The note left here after Phase 0 said to add `EFCore.NamingConventions` and call
+`UseSnakeCaseNamingConvention()` before the first entity migration. Phase 1 tried
+that first and found it unusable, for a reason worth writing down.
+
+That package is an `IConventionSetPlugin`. EF Core builds the model for its own
+`__EFMigrationsHistory` table from the same convention set, and does not pin that
+table's column names, so the plugin renames `MigrationId` and `ProductVersion` to
+`migration_id` and `product_version`. Generating the migration script made it
+plain:
+
+```sql
+CREATE TABLE IF NOT EXISTS "__EFMigrationsHistory" (
+    migration_id character varying(150) NOT NULL,
+    ...
+```
+
+On a fresh database this is invisible: the table is created and read with the
+same names. It only breaks when an existing database is upgraded — Phase 0's
+`__EFMigrationsHistory` has PascalCase columns, so the first thing EF does on
+startup fails with `column m.migration_id does not exist`, before a single
+migration runs.
+
+**Decision.** The package is not used. `Infrastructure/Persistence/SnakeCaseNaming.cs`
+rewrites table, column, key, foreign key and index names at the end of
+`OnModelCreating`. The history repository builds its own model and never consults
+`OnModelCreating`, so `__EFMigrationsHistory` is provably untouched. The
+requirement the original note was protecting — names mapped automatically rather
+than spelled out per property — is unchanged.
+
+`MigrationChainTests` holds this line: it applies the chain to an empty database,
+upgrades a database that stopped at the Phase 0 migration, and asserts the
+history table still has `MigrationId` / `ProductVersion`.

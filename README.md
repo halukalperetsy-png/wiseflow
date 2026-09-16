@@ -9,10 +9,10 @@ marketplace publishing.
 
 Architecture decisions live in [`docs/architecture/`](docs/architecture/).
 
-> **Status: Phase 0 (Bootstrap) complete.** The skeleton runs end to end: the
-> database starts from Compose, the API connects and exposes `/health`, the web
-> app polls it, and unit plus integration tests pass locally. No domain
-> features yet — those begin in Phase 1.
+> **Status: Phase 1 (Identity + Authorization) complete.** Sign-in, users,
+> roles, product groups and product-group-scoped access all work against the
+> real API and PostgreSQL. Phase 0's `/health` behaviour is unchanged. The
+> catalog itself — categories, products, SKUs — begins in Phase 2.
 
 ---
 
@@ -75,6 +75,11 @@ dotnet user-secrets set "ConnectionStrings:CommerceOpsDb" "Host=127.0.0.1;Port=5
 cd src\WebApp
 npm ci
 cd ..\..
+
+# 5. The first administrator -- your own values, never committed.
+dotnet user-secrets set "Bootstrap:AdminEmail"       "you@example.com"  --project src/Api
+dotnet user-secrets set "Bootstrap:AdminDisplayName" "Your Name"        --project src/Api
+dotnet user-secrets set "Bootstrap:AdminPassword"    "<a password you choose>" --project src/Api
 ```
 
 There is no connection string in `appsettings.json`. If it is missing at
@@ -109,12 +114,43 @@ cd src\WebApp
 npm run dev
 ```
 
-Open <http://localhost:5173>. The page shows API health, re-checked every 5
-seconds, including a live database check.
+Open <http://localhost:5173>. You are sent to the sign-in screen; use the
+administrator account created below.
+
+### Creating the first administrator
+
+```powershell
+dotnet run --project src/Api -- bootstrap-admin
+```
+
+Reads the three `Bootstrap:*` values from User Secrets (or the matching
+`Bootstrap__*` environment variables) and creates that account with the `Admin`
+role. There is no default password anywhere in this repository, and no HTTP
+endpoint that creates an administrator.
+
+Running it again is safe. An account that already exists is left with **its
+password untouched** — the command only makes sure it is active and in the
+`Admin` role. If the keys are missing, it stops and prints the exact commands to
+run. The database must be migrated first; it says so if it is not.
+
+### Giving a new user their first access
+
+An administrator creates the account under **Kullanıcılar → Yeni kullanıcı**. The
+API generates a temporary password and returns it once, in that response; the
+screen shows it with a copy button and it is gone as soon as you leave the page.
+Hand it over out of band. The user must change it at first sign-in — until they
+do, every other API call answers 403 and the app holds them on the
+change-password screen. There is no email service and no self-service reset in
+this phase; an administrator can issue a fresh temporary password from the user's
+page.
+
+`GET /health` stays anonymous and unchanged from Phase 0.
 
 The API listens on **HTTP only** in development and the Vite dev server proxies
-`/health` to it, so there is no HTTPS certificate to trust and no CORS to
-configure. TLS is terminated by the reverse proxy in deployment.
+`/health` and `/api` to it, so there is no HTTPS certificate to trust and no CORS
+to configure — and the session cookie is a first-party cookie for the dev server
+too. TLS is terminated by the reverse proxy in deployment, where the auth cookie
+switches to `Secure` automatically.
 
 ---
 
@@ -127,6 +163,7 @@ dotnet test                                    # unit + integration
 cd src\WebApp
 npm run lint
 npm run typecheck
+npm run check          # health, API client and permission checks
 npm run build
 ```
 
@@ -195,6 +232,9 @@ flow.
 ├── src/
 │   ├── Api/                   ASP.NET Core minimal API
 │   │   ├── Modules/           vertical slices, by business capability
+│   │   │   ├── Identity/      sign-in, users, roles, product group access
+│   │   │   ├── Catalog/       product groups (the rest arrives in Phase 2)
+│   │   │   └── Platform/      health
 │   │   └── Infrastructure/    persistence, configuration, error handling
 │   └── WebApp/                React + TypeScript + Vite
 └── tests/
@@ -203,7 +243,9 @@ flow.
 ```
 
 Read [`docs/architecture/module-conventions.md`](docs/architecture/module-conventions.md)
-before adding a feature.
+before adding a feature, and
+[`ADR-003`](docs/architecture/ADR-003-authentication.md) before touching anything
+to do with sessions or permissions.
 
 ---
 
@@ -215,6 +257,13 @@ Nothing secret is committed. Ever.
 |---|---|---|
 | Database password (Compose) | `.env`, git-ignored | environment variable |
 | API connection string | .NET User Secrets | `ConnectionStrings__CommerceOpsDb` |
+| First administrator email | .NET User Secrets | `Bootstrap__AdminEmail` |
+| First administrator name | .NET User Secrets | `Bootstrap__AdminDisplayName` |
+| First administrator password | .NET User Secrets | `Bootstrap__AdminPassword` |
+
+The `Bootstrap:*` values are read only by the `bootstrap-admin` command. Once the
+account exists they can be removed; the command will simply refuse to run until
+they are set again.
 
 `.gitignore` covers `.env`, `*.local.json` and `secrets.json`. If you add a new
 credential, add its shape to `.env.example` — never its value.
@@ -246,6 +295,17 @@ A `dotnet run` instance is still holding the build output. Stop it first.
 **Port 5432 already in use**
 Set `POSTGRES_PORT` in `.env` to a free port, and update the port in the User
 Secrets connection string to match.
+
+**`bootstrap-admin` says the first administrator is not configured**
+The three `Bootstrap:*` User Secrets are missing. The message names the exact
+commands; they are also in *One-time setup*.
+
+**`bootstrap-admin` says the database is not up to date**
+Run `dotnet ef database update --project src/Api` first.
+
+**Signed in, but every screen answers "parolanızı değiştirmeniz gerekiyor"**
+The account is still on the temporary password an administrator issued. Change
+it on the screen the app holds you on; the rest of the API unlocks immediately.
 
 **Tools "not found" right after installing them**
 Open a new terminal. A running shell keeps the `PATH` it started with.

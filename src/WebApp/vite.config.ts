@@ -7,9 +7,13 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      // Same-origin in development, so no CORS policy is needed on the API.
-      // The /api rule arrives with the first real /api/* endpoint.
+      // Same-origin in development, so no CORS policy is needed on the API and
+      // the session cookie is a first-party cookie for the dev server too.
       '/health': {
+        target: 'http://localhost:5080',
+        changeOrigin: true,
+      },
+      '/api': {
         target: 'http://localhost:5080',
         changeOrigin: true,
       },

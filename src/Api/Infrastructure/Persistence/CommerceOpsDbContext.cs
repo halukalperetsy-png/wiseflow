@@ -1,13 +1,21 @@
+using CommerceOps.Api.Modules.Identity.Roles;
+using CommerceOps.Api.Modules.Identity.Users;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace CommerceOps.Api.Infrastructure.Persistence;
 
 /// <summary>
-/// Phase 0 holds no entities. The assembly scan is in place so the first real
-/// entity in Phase 1 only needs its own IEntityTypeConfiguration.
+/// One DbContext for the whole application (ADR-001).
+///
+/// The base type is IdentityDbContext so ASP.NET Core Identity's EF stores work
+/// unchanged. That is a deliberate, visible coupling from Infrastructure to the
+/// Identity module -- documented in ADR-003 -- and the only one: modules add no
+/// DbSet properties here, they use context.Set&lt;T&gt;() and an
+/// IEntityTypeConfiguration that the assembly scan below picks up.
 /// </summary>
 internal sealed class CommerceOpsDbContext(DbContextOptions<CommerceOpsDbContext> options)
-    : DbContext(options)
+    : IdentityDbContext<User, Role, Guid>(options)
 {
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -15,5 +23,8 @@ internal sealed class CommerceOpsDbContext(DbContextOptions<CommerceOpsDbContext
 
         base.OnModelCreating(modelBuilder);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(CommerceOpsDbContext).Assembly);
+
+        // Last, so it sees every name the configurations above produced.
+        SnakeCaseNaming.Apply(modelBuilder);
     }
 }
