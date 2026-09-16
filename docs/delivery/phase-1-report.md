@@ -69,15 +69,23 @@ tutulanlar (sonraki fazlara sessizce taşınmadı, burada listeleniyor):
 - Repo: `D:\Git\wiseflow`
 - Branch: `feature/phase-1-identity-authorization` (bu fazda oluşturuldu)
 - Başlangıç commit'i: `82ed1b0`
-- **Commit, push, merge veya deploy yapılmadı.** Tüm değişiklikler inceleme için
-  çalışma ağacında duruyor.
+- Faz 1 commit'i: `cbd1c6d feat: implement phase 1 identity and authorization`
+  (115 dosya, +10.062 / −52), kullanıcı onayıyla `origin`'e normal push edildi.
+- Bakım commit'i: `chore: update CI action runtimes and delivery evidence`.
+- **Merge veya deploy yapılmadı**; `main` `82ed1b0`'de duruyor. Pull request
+  açılmadı.
 
 ### Git çalışma ağacı özeti
 
-```
-18 değişen dosya (M)
-32 yeni yol (??)
-```
+Faz 1 commit'i sonrası çalışma ağacı temizdi (`git status --porcelain` boş).
+Commit öncesi kontrolde bulunan ve düzeltilenler:
+
+- `MigrationChainTests` Testcontainers parolasını kaynağa sabit yazıyordu; diğer
+  üç fixture gibi her çalıştırmada üretilecek şekilde değiştirildi (Faz 0'ın
+  "hiçbir test parolası kaynağa yazılmaz" kuralı).
+- `CommerceOpsDbContextFactory.cs`'te yalnız satır sonu farkı kalmıştı; içerik
+  değişmediği için commit'e alınmadı.
+- `Program.cs` içindeki `using` sırası düzeltildi.
 
 ### Değişen dosyalar ve amaçları
 
@@ -86,7 +94,6 @@ tutulanlar (sonraki fazlara sessizce taşınmadı, burada listeleniyor):
 | `src/Api/Program.cs` | `bootstrap-admin` verbi; Identity/authorization kayıtları; auth, rate limiter, no-store ve parola kapısı middleware'leri; yeni slice'ların `Map*` çağrıları |
 | `src/Api/CommerceOps.Api.csproj` | `Microsoft.AspNetCore.Identity.EntityFrameworkCore` 10.0.12 |
 | `Infrastructure/Persistence/CommerceOpsDbContext.cs` | Taban tip `IdentityDbContext<User, Role, Guid>`; snake_case geçişi |
-| `Infrastructure/Persistence/CommerceOpsDbContextFactory.cs` | (net etki yok — eklenen convention çağrısı geri alındı, bkz. bölüm 3) |
 | `Migrations/CommerceOpsDbContextModelSnapshot.cs` | EF tarafından yeni migration ile güncellendi |
 | `src/WebApp/package.json`, `package-lock.json` | Tek yeni runtime bağımlılığı `react-router` 7.18.4; `check:api`, `check:permissions`, `check` scriptleri |
 | `src/WebApp/vite.config.ts` | `/api` proxy kuralı |
@@ -95,7 +102,7 @@ tutulanlar (sonraki fazlara sessizce taşınmadı, burada listeleniyor):
 | `src/WebApp/src/app/AppShell.tsx` | Gezinme, oturum bilgisi, çıkış; layout route |
 | `src/WebApp/src/app/styles/tokens.css` | Tek yeni token `--color-accent-text`, üç bloğa da eklendi |
 | `src/WebApp/src/app/styles/global.css` | `components.css` import'u |
-| `.github/workflows/ci.yml` | Frontend job'a `check:api` ve `check:permissions` adımları |
+| `.github/workflows/ci.yml` | Frontend job'a `check:api` ve `check:permissions` adımları; action çalışma zamanları `checkout@v6`, `setup-dotnet@v5`, `setup-node@v7`'ye yükseltildi |
 | `README.md` | Faz 1 durumu, `bootstrap-admin`, yapılandırma anahtarları, ilk erişim akışı, sorun giderme |
 | `docs/architecture/ADR-002-postgresql.md` | snake_case uygulama yönteminin değişme gerekçesi |
 | `docs/architecture/module-conventions.md` | Catalog'un Faz 1'de açılması, `Set<T>()` kuralı, izin kataloğunun yeri, 404 kuralı |
@@ -392,15 +399,27 @@ test veritabanı olarak kullanılmadı.
 
 ### Uzak CI sonucu
 
-**DOĞRULANAMADI.** `gh` CLI bu makinede kurulu değil ve GitHub Actions API deposu
-için 404 dönüyor (depo private). Bu fazda uzak CI çalıştırılmadı ve sonucu
-görülmedi. Yerel olarak CI'ın çalıştırdığı komutların tamamı (yukarıdaki tabloda)
-aynı bayraklarla çalıştırıldı ve geçti; bu, uzak CI'ın geçeceğinin garantisi
-değildir.
+**Geçti.** `cbd1c6d` commit'i için GitHub Actions koşusu **#2**, kullanıcı
+tarafından GitHub arayüzünde doğrulandı.
+
+| Job | Sonuç | Süre |
+|---|---|---|
+| `backend` | Başarılı | 1 dk 34 sn |
+| `frontend` | Başarılı | 24 sn |
+| **Genel** | **Success** | **1 dk 39 sn** |
+
+Bu sonuç bu makineden okunamadı — `gh` CLI kurulu değil (bilinçli karar) ve
+GitHub Actions API depo için kimliksiz 404 dönüyor (depo private). Yukarıdaki
+satırlar kullanıcının arayüzde gördüğü koşunun aktarımıdır.
+
+Koşu iki **annotation** üretti: `actions/checkout@v4`, `actions/setup-dotnet@v4`
+ve `actions/setup-node@v4` eski Node 20 çalışma zamanını hedefliyordu. Bunlar
+sırasıyla `@v6`, `@v5` ve `@v7` olarak güncellendi; `global-json-file`,
+`node-version`, npm önbelleği, çalışma dizinleri ve bütün build/test komutları
+değiştirilmedi. **Bu güncellemenin tetiklediği yeni koşunun sonucu henüz
+görülmedi** ve bu raporda başarılı sayılmamaktadır.
 
 ### Çalıştırılmayan kontroller
-
-- Uzak CI — yukarıda.
 - Yük/performans testi — kapsamda yoktu.
 - Erişilebilirlik denetim aracı (axe vb.) — kapsamda yoktu; klavye erişimi,
   görünür odak, etiketler ve `aria-*` elle uygulandı ve tarayıcıda gözlendi,
@@ -522,7 +541,8 @@ kapsayıcısında yatay kayıyor ve **sayfa gövdesi yatay taşmıyor**.
 | 20 | Yeni testler gerçekten keşfediliyor | **Geçti** | 13 → 97 test (84 yeni) |
 | 21 | Arayüzde gerçek API ile giriş, kullanıcı oluşturma, grup oluşturma, atama, normal kullanıcı görünümü, çıkış | **Geçti** | Bölüm 6, adım 1–21 (20–21 için otomasyon notu) |
 | 22 | Light/dark tema ve dar ekran düzeni | **Geçti** | Bölüm 6 ekran görüntüleri |
-| — | Uzak CI | **Doğrulanamadı** | `gh` yok, depo private |
+| — | Uzak CI (`cbd1c6d`, koşu #2) | **Geçti** | backend 1m34s + frontend 24s, genel Success; kullanıcı tarafından GitHub arayüzünde doğrulandı |
+| — | Uzak CI (action sürüm güncellemesinden sonraki koşu) | **Henüz görülmedi** | Bu commit'in tetiklediği koşu bu makineden okunamıyor |
 
 ---
 
@@ -560,10 +580,10 @@ başarısızlık nedeni tek tip yanıt döndürüyor. Kullanıcı kilitlendiğin
 anlamayabilir; giriş formundaki sabit yardım metni bunu telafi ediyor, ayrım
 sunucu logunda duruyor. **Teslimi engellemiyor.**
 
-**6. Uzak CI doğrulanmadı.** `gh` kurulu değil ve depo private. Yerel olarak
-CI'ın çalıştırdığı komutların tamamı aynı bayraklarla geçti, ama uzak koşuya
-bakılmadı. **Karar gerekiyor:** `gh` kurulmasını ve uzak CI'ın kontrol
-edilmesini ister misiniz?
+**6. Uzak CI bu makineden okunamıyor.** `gh` kurulmaması kararlaştırıldı ve depo
+private olduğu için Actions API kimliksiz 404 dönüyor. `cbd1c6d` için koşu #2
+kullanıcı tarafından arayüzde doğrulandı (Success); sonraki koşuların sonucunu
+da arayüzden kontrol etmek gerekiyor. **Teslimi engellemiyor.**
 
 **7. Erişilebilirlik otomatik denetimden geçmedi.** Klavye erişimi, görünür odak,
 form etiketleri, `aria-invalid`/`aria-describedby`, `role="alert"` ve
@@ -615,9 +635,12 @@ click ile sürüldü (bölüm 6). Uygulama davranışı değil, ortam sorunu.
 
 ### Kalan işler
 
-- Uzak CI'ın bu branch üzerinde çalıştırılması ve sonucunun görülmesi.
-- Bölüm 8'deki iki açık karar: çıkışın global iptal olup olmayacağı ve `gh`
-  kurulumu.
+- Action sürüm güncellemesinden sonraki CI koşusunun GitHub arayüzünden
+  doğrulanması.
+- Pull request açılması.
+
+Bölüm 8'deki iki açık karar sonuçlandı: çıkış yalnız mevcut oturumu kapatmaya
+devam edecek (davranış değiştirilmedi) ve `gh` CLI kurulmayacak.
 
 ### Faz 2'ye geçilmedi
 
